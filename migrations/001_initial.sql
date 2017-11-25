@@ -22,7 +22,9 @@ CREATE table api.locations (
 
   latitude   decimal      DEFAULT null,
   longitude  decimal      DEFAULT null,
-  geojson    json         DEFAULT null
+  geojson    json         DEFAULT null,
+
+  UNIQUE (city, state, county)
 );
 
 -- DETAILS Table  Definition
@@ -44,7 +46,7 @@ CREATE table api.raid_types (
   created_on timestamp DEFAULT current_timestamp,   -- added automatically on creation
   updated_on timestamp DEFAULT null,                -- see set_updated_on_column()
 
-  name        text     NOT null,
+  name        text     UNIQUE NOT null,
   description text     NOT null
 );
 
@@ -56,43 +58,42 @@ CREATE table api.raids (
   created_on timestamp DEFAULT current_timestamp,   -- added automatically on creation
   updated_on timestamp DEFAULT null,                -- see set_updated_on_column()
 
-  --
   -- internal organizational fields
-  --
   story                      varchar(32) NOT null,
   reference                  varchar(32) NOT null,
   report_citation_reference  varchar(32) NOT null,
   approved_on                timestamp   DEFAULT null,
-  approved_by                numeric     DEFAULT null,
+  -- approved_by                numeric     DEFAULT null,
 
-  --
   -- information about the raid itself
-  --
-  _type      smallint  DEFAULT null,            -- points to raid_types table
   datetime   timestamp DEFAULT null,            -- time of raid
   summary    text      DEFAULT null,            -- narrative summary
   exact_date boolean   NOT NULL DEFAULT true,   -- default to true. if false and datetime exists,
                                                 --   datetime is an approximation
+  -- raid type
+  _type smallint REFERENCES api.locations (id) DEFAULT null,  -- points to raid_types table
 
   -- information about the target
   status              varchar(16) DEFAULT null,
   years_in_us         smallint    DEFAULT null,
-  non_targets_present smallint    DEFAULT null
+  non_targets_present smallint    DEFAULT null,
 
   -- location: points to a location (fk-related)
-  -- location_id smallint REFERENCES api.locations (location_id)
+  location_id smallint REFERENCES api.locations (id)
 
   -- details: array of detail.id's
   -- raid_details_id smallint REFERENCES raid_details (raid_id)
 );
 
-create table api.raid_details (
+
+-- RAIDS_DETAILS Table Definition
+create table api.raids_details (
   -- internals
   id         serial    PRIMARY KEY,
 
   -- actual table stuffs
-  raid_id   smallint REFERENCES raids (raid_id),
-  detail_id smallint REFERENCES details (detail_id)
+  raid_id   smallint REFERENCES api.raids (id),
+  detail_id smallint REFERENCES api.details (id)
 );
 
 --
@@ -108,15 +109,15 @@ BEGIN
    NEW.updated_on = now();
    RETURN NEW;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 -- Create Trigger to fire off the function that updtes the updated_on field after a row is updated
 CREATE TRIGGER update_locations_set_updated_on BEFORE UPDATE
-ON locations FOR EACH ROW EXECUTE PROCEDURE
+ON api.locations FOR EACH ROW EXECUTE PROCEDURE
 set_updated_on_column();
 
 CREATE TRIGGER update_details_set_updated_on BEFORE UPDATE
-ON details FOR EACH ROW EXECUTE PROCEDURE
+ON api.details FOR EACH ROW EXECUTE PROCEDURE
 set_updated_on_column();
 
 CREATE TRIGGER update_raids_set_updated_on BEFORE UPDATE
@@ -126,10 +127,19 @@ set_updated_on_column();
 --
 -- ROLES
 --
-create role anon nologin;
-grant anon to postgres;
 
+-- anonymous user: can read
+create role anon nologin;
 grant usage on schema api to anon;
 grant select on api.locations to anon;
 grant select on api.details to anon;
 grant select on api.raids to anon;
+grant select on api.raid_types to anon;
+
+-- idp user: can read and write
+create role idp_user;
+grant usage on schema api to idp_user;
+grant select, insert on api.locations to idp_user;
+grant select, insert on api.details to idp_user;
+grant select, insert on api.raids to idp_user;
+grant select, insert on api.raid_types to idp_user;
