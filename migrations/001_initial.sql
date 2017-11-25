@@ -1,76 +1,99 @@
-CREATE schema api;
-
--- Install the uuid-ossp extension so we can autogenerate UUIDs
+--
+-- EXTENSIONS
+--
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+--
+-- SCHEMA
+--
+CREATE schema api;
 
--- Define some tables
+-- LOCATIONS Table  Definition
 CREATE table api.locations (
   id         serial    PRIMARY KEY,
-  _uuid      uuid      NOT NULL DEFAULT uuid_generate_v4(),    -- automatically add uuid4
-  created_on timestamp DEFAULT current_timestamp,              -- added automatically on creation
-  updated_on timestamp DEFAULT null,                           -- see update_updated_on_colum()
+  _uuid      uuid      DEFAULT uuid_generate_v4(),  -- automatically add uuid4
+  created_on timestamp DEFAULT current_timestamp,   -- added automatically on creation
+  updated_on timestamp DEFAULT null,                -- see set_updated_on_column()
 
-  city
-  state
-  county
-  zipcode
+  city       varchar(256) DEFAULT null,
+  state      varchar(2)   DEFAULT null,
+  county     varchar(128) DEFAULT null,
+  zipcode    varchar(12)  DEFAULT null,
 
-  latitude
-  longitude
+  latitude   decimal      DEFAULT null,
+  longitude  decimal      DEFAULT null,
+  geojson    json         DEFAULT null
+);
 
-  resolution
-)
-
-
+-- DETAILS Table  Definition
 CREATE table api.details (
   -- internals
   id         serial    PRIMARY KEY,
-  _uuid      uuid      NOT NULL DEFAULT uuid_generate_v4(),    -- automatically add uuid4
-  created_on timestamp DEFAULT current_timestamp,              -- added automatically on creation
-  updated_on timestamp DEFAULT null,                           -- see update_updated_on_colum()
+  _uuid      uuid      DEFAULT uuid_generate_v4(),  -- automatically add uuid4
+  created_on timestamp DEFAULT current_timestamp,   -- added automatically on creation
+  updated_on timestamp DEFAULT null,                -- see set_updated_on_column()
 
-  description text not null,
-)
+  description text     NOT NULL
+);
 
+-- RAID TYPES Table  Definition
+CREATE table api.raid_types (
+  -- internals
+  id         serial    PRIMARY KEY,
+  _uuid      uuid      DEFAULT uuid_generate_v4(),  -- automatically add uuid4
+  created_on timestamp DEFAULT current_timestamp,   -- added automatically on creation
+  updated_on timestamp DEFAULT null,                -- see set_updated_on_column()
+
+  name        text     NOT null,
+  description text     NOT null
+);
 
 -- RAIDS Table Definition
 CREATE table api.raids (
   -- internals
-  id         serial        PRIMARY KEY,
-  _uuid       uuid       NOT NULL DEFAULT uuid_generate_v4(),    -- n.b. automatically add uuid4
-  created_on
-  updated_on
+  id         serial    PRIMARY KEY,
+  _uuid      uuid      DEFAULT uuid_generate_v4(),  -- automatically add uuid4
+  created_on timestamp DEFAULT current_timestamp,   -- added automatically on creation
+  updated_on timestamp DEFAULT null,                -- see set_updated_on_column()
 
   --
   -- internal organizational fields
   --
-  story
-  reference
-  report_citation_reference
-  approved_on
-
+  story                      varchar(32) NOT null,
+  reference                  varchar(32) NOT null,
+  report_citation_reference  varchar(32) NOT null,
+  approved_on                timestamp   DEFAULT null,
+  approved_by                numeric     DEFAULT null,
 
   --
   -- information about the raid itself
   --
-
-  _type
-  datetime
-  exact_date   -- default to true. if is false and datetiem exists, datetime is an approximation
-  summary
+  _type      smallint  DEFAULT null,            -- points to raid_types table
+  datetime   timestamp DEFAULT null,            -- time of raid
+  summary    text      DEFAULT null,            -- narrative summary
+  exact_date boolean   NOT NULL DEFAULT true,   -- default to true. if false and datetime exists,
+                                                --   datetime is an approximation
 
   -- information about the target
-  status
-  years_in_us
-  non_targets_present
+  status              varchar(16) DEFAULT null,
+  years_in_us         smallint    DEFAULT null,
+  non_targets_present smallint    DEFAULT null
 
   -- location: points to a location (fk-related)
-  location_id
+  -- location_id smallint REFERENCES api.locations (location_id)
 
   -- details: array of detail.id's
-  details
-)
+  -- raid_details_id smallint REFERENCES raid_details (raid_id)
+);
+
+create table api.raid_details (
+  -- internals
+  id         serial    PRIMARY KEY,
+
+  -- actual table stuffs
+  raid_id   smallint REFERENCES raids (raid_id),
+  detail_id smallint REFERENCES details (detail_id)
+);
 
 --
 -- UPDATED ON
@@ -87,26 +110,26 @@ BEGIN
 END;
 $$;
 
--- Add to relevant tables
-DO
-$do$
-BEGIN
-FOR i IN 1..25 LOOP
-    CREATE TRIGGER update_{table}_changetimestamp BEFORE UPDATE
-    ON ab FOR EACH ROW EXECUTE PROCEDURE
-    update_changetimestamp_column();
-END;
-$$;
-
 -- Create Trigger to fire off the function that updtes the updated_on field after a row is updated
-CREATE TRIGGER update_locations_changetimestamp BEFORE UPDATE
+CREATE TRIGGER update_locations_set_updated_on BEFORE UPDATE
 ON locations FOR EACH ROW EXECUTE PROCEDURE
-update_changetimestamp_column();
+set_updated_on_column();
 
-CREATE TRIGGER update_details_changetimestamp BEFORE UPDATE
+CREATE TRIGGER update_details_set_updated_on BEFORE UPDATE
 ON details FOR EACH ROW EXECUTE PROCEDURE
-update_changetimestamp_column();
+set_updated_on_column();
 
-CREATE TRIGGER update_raids_changetimestamp BEFORE UPDATE
-ON raids FOR EACH ROW EXECUTE PROCEDURE
-update_changetimestamp_column();
+CREATE TRIGGER update_raids_set_updated_on BEFORE UPDATE
+ON api.raids FOR EACH ROW EXECUTE PROCEDURE
+set_updated_on_column();
+
+--
+-- ROLES
+--
+create role anon nologin;
+grant anon to postgres;
+
+grant usage on schema api to anon;
+grant select on api.locations to anon;
+grant select on api.details to anon;
+grant select on api.raids to anon;
