@@ -28,7 +28,7 @@ CREATE table IF NOT EXISTS api.locations (
 );
 
 -- DETAILS Table  Definition
-CREATE IF NOT EXISTS table api.details (
+CREATE table IF NOT EXISTS api.details (
   -- internals
   id         serial    PRIMARY KEY,
   _uuid      uuid      DEFAULT uuid_generate_v4(),  -- automatically add uuid4
