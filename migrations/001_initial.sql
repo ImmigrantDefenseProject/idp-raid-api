@@ -6,10 +6,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 --
 -- SCHEMA
 --
-CREATE schema api;
+CREATE SCHEMA IF NOT EXISTS api;
 
 -- LOCATIONS Table  Definition
-CREATE table api.locations (
+CREATE table IF NOT EXISTS api.locations (
   id         serial    PRIMARY KEY,
   _uuid      uuid      DEFAULT uuid_generate_v4(),  -- automatically add uuid4
   created_on timestamp DEFAULT current_timestamp,   -- added automatically on creation
@@ -28,7 +28,7 @@ CREATE table api.locations (
 );
 
 -- DETAILS Table  Definition
-CREATE table api.details (
+CREATE IF NOT EXISTS table api.details (
   -- internals
   id         serial    PRIMARY KEY,
   _uuid      uuid      DEFAULT uuid_generate_v4(),  -- automatically add uuid4
@@ -39,7 +39,7 @@ CREATE table api.details (
 );
 
 -- RAID TYPES Table  Definition
-CREATE table api.raid_types (
+CREATE table IF NOT EXISTS api.raid_types (
   -- internals
   id         serial    PRIMARY KEY,
   _uuid      uuid      DEFAULT uuid_generate_v4(),  -- automatically add uuid4
@@ -51,7 +51,7 @@ CREATE table api.raid_types (
 );
 
 -- RAIDS Table Definition
-CREATE table api.raids (
+CREATE table IF NOT EXISTS api.raids (
   -- internals
   id         serial    PRIMARY KEY,
   _uuid      uuid      DEFAULT uuid_generate_v4(),  -- automatically add uuid4
@@ -87,7 +87,7 @@ CREATE table api.raids (
 
 
 -- RAIDS_DETAILS Table Definition
-create table api.raids_details (
+create table IF NOT EXISTS api.raids_details (
   -- internals
   id         serial    PRIMARY KEY,
 
@@ -103,7 +103,7 @@ create table api.raids_details (
 -- we define a function to set updated_on on when a table is updated
 -- we then add it to every table with an updated_on column
 
-CREATE OR  REPLACE FUNCTION set_updated_on_column()
+CREATE OR REPLACE FUNCTION set_updated_on_column()
 RETURNS TRIGGER AS $$
 BEGIN
    NEW.updated_on = now();
@@ -112,14 +112,17 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create Trigger to fire off the function that updtes the updated_on field after a row is updated
+DROP TRIGGER IF EXISTS update_locations_set_updated_on on api.locations;
 CREATE TRIGGER update_locations_set_updated_on BEFORE UPDATE
 ON api.locations FOR EACH ROW EXECUTE PROCEDURE
 set_updated_on_column();
 
+DROP TRIGGER IF EXISTS update_details_set_updated_on on api.details;
 CREATE TRIGGER update_details_set_updated_on BEFORE UPDATE
 ON api.details FOR EACH ROW EXECUTE PROCEDURE
 set_updated_on_column();
 
+DROP TRIGGER IF EXISTS update_raids_set_updated_on on api.raids;
 CREATE TRIGGER update_raids_set_updated_on BEFORE UPDATE
 ON api.raids FOR EACH ROW EXECUTE PROCEDURE
 set_updated_on_column();
@@ -129,17 +132,17 @@ set_updated_on_column();
 --
 
 -- anonymous user: can read
-create role anon nologin;
-grant usage on schema api to anon;
-grant select on api.locations to anon;
-grant select on api.details to anon;
-grant select on api.raids to anon;
-grant select on api.raid_types to anon;
+CREATE role anon nologin;
+GRANT usage on schema api to anon;
+GRANT select on api.locations to anon;
+GRANT select on api.details to anon;
+GRANT select on api.raids to anon;
+GRANT select on api.raid_types to anon;
 
 -- idp user: can read and write
-create role idp_user;
-grant usage on schema api to idp_user;
-grant select, insert on api.locations to idp_user;
-grant select, insert on api.details to idp_user;
-grant select, insert on api.raids to idp_user;
-grant select, insert on api.raid_types to idp_user;
+CREATE role idp_user;
+GRANT usage on schema api to idp_user;
+GRANT select, insert on api.locations to idp_user;
+GRANT select, insert on api.details to idp_user;
+GRANT select, insert on api.raids to idp_user;
+GRANT select, insert on api.raid_types to idp_user;
