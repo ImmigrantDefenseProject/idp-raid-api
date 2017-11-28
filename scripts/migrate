@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# runs all of the *.sql file in the migrations directory
+# expects to be run from the root of the project directory
+
+PURPLE='\033[0;35m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+RESET='\033[0m'
+
+echo ""
+echo " ------ ${RED}Running Migrations${RESET} ------"
+echo ""
+for f in migrations/*.sql;
+  do
+     echo " ‣ ${PURPLE}$f${RESET}";
+
+     # execute command with minimal logging
+     # -E no echo
+     # -q quietly
+     psql -Eq $DB_URI -f $f;
+
+     # TODO: use `$?` to determine the color of the output
+     # i.e. if $? == 1 do echo " 𝘅 ${RED}$f${RESET}";
+
+     echo " ✔ ${GREEN}$f${RESET}";
+     echo ""
+     echo " ---------------------------------------- "
+     echo ""
+done
