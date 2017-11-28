@@ -71,7 +71,7 @@ CREATE table IF NOT EXISTS api.raids (
   exact_date boolean   NOT NULL DEFAULT true,   -- default to true. if false and datetime exists,
                                                 --   datetime is an approximation
   -- raid type
-  _type smallint REFERENCES api.locations (id) DEFAULT null,  -- points to raid_types table
+  _type smallint REFERENCES api.raid_types (id) DEFAULT null,  -- points to raid_types table
 
   -- information about the target
   status              varchar(16) DEFAULT null,
@@ -89,7 +89,7 @@ CREATE table IF NOT EXISTS api.raids (
 -- RAIDS_DETAILS Table Definition
 create table IF NOT EXISTS api.raids_details (
   -- internals
-  id         serial    PRIMARY KEY,
+  id serial PRIMARY KEY,
 
   -- actual table stuffs
   raid_id   smallint REFERENCES api.raids (id),
