@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# this needs to be run once to set the secret key for the jwt
+# this is in its own file because it only needs to run once
+# however, it CAN be run more than once it'll just throw an error
+
+PURPLE='\033[0;35m'
+RESET='\033[0m'
+
+echo ""
+echo " --- ${PURPLE}Adding Type: jwt_token${RESET} ---"
+echo ""
+
+psql -Eq $DB_URI -c "CREATE type basic_auth.jwt_token AS (token text);"
+
+echo ""
+echo " --- ${PURPLE}Setting DB Variable: jwt_secret${RESET} ---"
+echo ""
+
+
+psql -Eq $DB_URI -c "ALTER DATABASE idp_raids_api SET \"idp_raids_api.jwt_secret\" TO \"${JWT_SECRET}\"";
