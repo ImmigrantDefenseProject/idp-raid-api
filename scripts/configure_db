@@ -11,11 +11,15 @@ echo ""
 echo " --- ${PURPLE}Adding Type: jwt_token${RESET} ---"
 echo ""
 
-psql -Eq $DB_URI -c "CREATE type basic_auth.jwt_token AS (token text);"
+psql -Eq $DB_URI -c "CREATE type jwt_token AS (token text);"
 
 echo ""
 echo " --- ${PURPLE}Setting DB Variable: jwt_secret${RESET} ---"
 echo ""
 
-
 psql -Eq $DB_URI -c "ALTER DATABASE idp_raids_api SET \"idp_raids_api.jwt_secret\" TO \"${JWT_SECRET}\"";
+
+echo ""
+echo " --- ${PURPLE}Setting DB Variable: jwt_ttl${RESET} ---"
+echo ""
+# psql -Eq $DB_URI -c "ALTER DATABASE idp_raids_api SET \"idp_raids_api.jwt_ttl\" TO \"${JWT_TTL}\"";
