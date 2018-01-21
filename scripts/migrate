@@ -10,10 +10,11 @@ RESET='\033[0m'
 
 echo ""
 echo " ------ ${RED}Running Migrations${RESET} ------"
-echo ""
 for f in migrations/*.sql;
   do
+     echo "";
      echo " ‣ ${PURPLE}$f${RESET}";
+     echo "";
 
      # execute command with minimal logging
      # -E no echo
@@ -28,9 +29,9 @@ for f in migrations/*.sql;
          echo " 𝘅 ${RED}$f${RESET}";
          exit $?;
      else
+         echo "";
          echo " ✔ ${GREEN}$f${RESET}";
          echo "";
          echo " ---------------------------------------- ";
-         echo "";
      fi
 done

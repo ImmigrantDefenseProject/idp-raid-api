@@ -7,11 +7,18 @@
 PURPLE='\033[0;35m'
 RESET='\033[0m'
 
+
+echo ""
+echo " --- ${PURPLE}Create Schemas: basic_auth & api${RESET} ---"
+echo ""
+psql -Eq $DB_URI -c "CREATE schema IF NOT EXISTS api;"
+psql -Eq $DB_URI -c "CREATE schema IF NOT EXISTS basic_auth;"
+
 echo ""
 echo " --- ${PURPLE}Adding Type: jwt_token${RESET} ---"
 echo ""
 
-psql -Eq $DB_URI -c "CREATE type jwt_token AS (token text);"
+psql -Eq $DB_URI -c "CREATE type basic_auth.jwt_token AS (token text);"
 
 echo ""
 echo " --- ${PURPLE}Setting DB Variable: jwt_secret${RESET} ---"
@@ -22,4 +29,4 @@ psql -Eq $DB_URI -c "ALTER DATABASE idp_raids_api SET \"idp_raids_api.jwt_secret
 echo ""
 echo " --- ${PURPLE}Setting DB Variable: jwt_ttl${RESET} ---"
 echo ""
-# psql -Eq $DB_URI -c "ALTER DATABASE idp_raids_api SET \"idp_raids_api.jwt_ttl\" TO \"${JWT_TTL}\"";
+psql -Eq $DB_URI -c "ALTER DATABASE idp_raids_api SET \"idp_raids_api.jwt_ttl\" TO \"${JWT_TTL}\"";
