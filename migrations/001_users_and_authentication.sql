@@ -74,30 +74,3 @@ BEGIN
   );
 END;
 $$;
-
-CREATE OR REPLACE FUNCTION basic_auth.login(
-  email text,
-  pass text
-) RETURNS jwt_token
-  LANGUAGE plpgsql
-  AS $$
-DECLARE
-  _role name;
-  result jwt_token;
-BEGIN
-
-  -- check email and password
-  SELECT basic_auth.user_role(CAST(email AS text), CAST(pass AS text)) INTO _role;
-  IF _role IS NULL THEN
-    RAISE invalid_password USING MESSAGE = 'invalid user or password';
-  END IF;
-
-  -- grab fields for JWT
-  -- encrypt and return JWT
-  SELECT email as token INTO result;
-
-  -- return the result
-  RETURN result;
-
-END;
-$$;

@@ -1,5 +1,16 @@
 env.dev
+env.prod
 postgrest
 postgrest.dev.conf
 
-.*.sw[op]
+### Vim ###
+# swap
+.sw[a-p]
+.*.sw[a-p]
+# session
+Session.vim
+# temporary
+.netrwhist
+*~
+# auto-generated tag files
+tags
