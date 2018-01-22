@@ -6,27 +6,25 @@
 
 PURPLE='\033[0;35m'
 RESET='\033[0m'
-
+export PGPASSWORD=$DB_PASSWORD
 
 echo ""
 echo " --- ${PURPLE}Create Schemas: basic_auth & api${RESET} ---"
-echo ""
-psql -Eq $DB_URI -c "CREATE schema IF NOT EXISTS api;"
-psql -Eq $DB_URI -c "CREATE schema IF NOT EXISTS basic_auth;"
+psql -H $DB_HOST -d $DB_NAME -U $DB_USER -c "CREATE schema IF NOT EXISTS api;";
+psql -H $DB_HOST -d $DB_NAME -U $DB_USER -c "CREATE schema IF NOT EXISTS basic_auth;";
 
 echo ""
 echo " --- ${PURPLE}Adding Type: jwt_token${RESET} ---"
 echo ""
 
-psql -Eq $DB_URI -c "CREATE type basic_auth.jwt_token AS (token text);"
+psql -H $DB_HOST -d $DB_NAME -U $DB_USER -c "CREATE type basic_auth.jwt_token AS (token text);";
 
 echo ""
 echo " --- ${PURPLE}Setting DB Variable: jwt_secret${RESET} ---"
 echo ""
 
-psql -Eq $DB_URI -c "ALTER DATABASE idp_raids_api SET \"idp_raids_api.jwt_secret\" TO \"${JWT_SECRET}\"";
+psql -H $DB_HOST -d $DB_NAME -U $DB_USER -c "ALTER DATABASE $DB_NAME SET \"$DB_NAME.jwt_secret\" TO \"${JWT_SECRET}\";";
 
 echo ""
 echo " --- ${PURPLE}Setting DB Variable: jwt_ttl${RESET} ---"
-echo ""
-psql -Eq $DB_URI -c "ALTER DATABASE idp_raids_api SET \"idp_raids_api.jwt_ttl\" TO \"${JWT_TTL}\"";
+psql -H $DB_HOST -d $DB_NAME -U $DB_USER -c "ALTER DATABASE $DB_NAME SET \"$DB_NAME.jwt_ttl\" TO \"${JWT_TTL}\";";

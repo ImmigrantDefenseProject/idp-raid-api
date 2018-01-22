@@ -8,6 +8,7 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
+export PGPASSWORD=$DB_PASSWORD
 echo ""
 echo " ------ ${RED}Running Migrations${RESET} ------"
 for f in migrations/*.sql;
@@ -21,7 +22,7 @@ for f in migrations/*.sql;
      # -q quietly
 
      # we could pipe to sed to print with indentation: | sed 's/^/ /'
-     psql -Eq $DB_URI -f $f;
+     psql -H $DB_HOST -U $DB_USER -Eq -f $f;
 
      # TODO: use `$?` to determine the color of the output
      if [ $? != 0 ]; then

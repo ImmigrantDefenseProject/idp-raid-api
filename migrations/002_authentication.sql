@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION api.jwt_test() RETURNS basic_auth.jwt_token
     LANGUAGE sql
     AS $$
   SELECT sign(
-    row_to_json(r), current_setting('idp_raids_api.jwt_secret')
+    row_to_json(r), current_setting('app.jwt_secret')
   ) AS token
   FROM (
     SELECT
@@ -40,7 +40,7 @@ BEGIN
   -- grab fields for JWT
   -- encrypt and return JWT
   SELECT sign(
-      row_to_json(r), current_setting('idp_raids_api.jwt_secret')
+      row_to_json(r), current_setting('app.jwt_secret')
     ) as token
     FROM (
       SELECT _role as role, login.email as email,
